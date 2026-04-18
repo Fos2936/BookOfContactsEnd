@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">BookOfContacts</string>
+    <string name="number_phone">+7 (495) 123–45–67</string>
+    <string name="email">contact@example.com</string>
+    <string name="location_point">Наш офис</string>
+    <string name="appeal">Обращение</string>
+    <string name="contactBook">Контактная книга</string>
+    <string name="Ring">Позвонить</string>
+    <string name="EmailWrite">Написать email</string>
+    <string name="ShowOffice">Показать офис на карте</string>
+    <string name="ShareContact">Поделиться контактом</string>
+    <string name="Contact">Контакт: </string>
+</resources>
