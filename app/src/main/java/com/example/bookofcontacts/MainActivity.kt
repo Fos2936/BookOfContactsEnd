@@ -50,34 +50,57 @@ fun callPhoneNumber(context: Context, phoneNumber: String) {
     }
 }
 
+fun ExceptionTryEmail(intent: Intent, context: Context) {
+    if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+    } else {
+        Toast.makeText(
+            context,
+            "Не удалось отправить сообщение",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+}
+
+fun ExceptionTryMap(intent: Intent, context: Context) {
+    if (intent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(intent)
+    } else {
+        Toast.makeText(
+            context,
+            "Не удалось отправить сообщение",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+}
+
 fun sendEmail(context: Context, address: String, subject: String) {
     val intent = Intent(Intent.ACTION_SENDTO).apply {
         data = Uri.parse("mailto:") // Только email-приложения обрабатывают эту схему
         putExtra(Intent.EXTRA_EMAIL, arrayOf(address))
         putExtra(Intent.EXTRA_SUBJECT, subject)
     }
-    if (intent.resolveActivity(context.packageManager) != null) {
-        context.startActivity(intent)
-    }
+
+    ExceptionTryEmail(intent,context)
 }
 
 fun showOfficeOnMap(context: Context, latitude: Double, longitude: Double, label: String) {
-    // 1. Пытаемся открыть через системное приложение (geo URI)
+
     val geoUri = Uri.parse("geo:0,0?q=$latitude,$longitude($label)")
     val mapIntent = Intent(Intent.ACTION_VIEW, geoUri)
 
+    ExceptionTry(mapIntent, context)
     if (mapIntent.resolveActivity(context.packageManager) != null) {
         context.startActivity(mapIntent)
     } else {
-        // 2. Если приложений нет, формируем ссылку для браузера
-        // Используем универсальную ссылку Google Maps
+
         val webUrl = "https://google.com"
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(webUrl))
 
         try {
             context.startActivity(browserIntent)
         } catch (e: Exception) {
-            // Если даже браузера нет (крайний случай)
+
             Toast.makeText(
                 context,
                 "Не удалось открыть карту",
@@ -92,8 +115,7 @@ fun shareContact(context: Context, contactInfo: String) {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, contactInfo)
     }
-    // createChooser всегда показывает диалог выбора приложения
-    // (даже если у пользователя выбрано приложение по умолчанию)
+
     val chooser = Intent.createChooser(sendIntent, "Поделиться через...")
     context.startActivity(chooser)
 }
