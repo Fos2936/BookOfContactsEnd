@@ -49,6 +49,12 @@ fun callPhoneNumber(context: Context, phoneNumber: String) {
     if (intent.resolveActivity(context.packageManager) != null) {
         context.startActivity(intent)
     }
+
+    exceptionTry(
+        intent = intent,
+        context = context,
+        errorMessage = "Не удалось открыть контакты",
+    )
 }
 
 fun exceptionTry(
