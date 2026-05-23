@@ -1,8 +1,8 @@
 package com.example.bookofcontacts
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bookofcontacts.ui.theme.BookOfContactsTheme
+import androidx.core.net.toUri
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,70 +45,61 @@ class MainActivity : ComponentActivity() {
 }
 
 fun callPhoneNumber(context: Context, phoneNumber: String) {
-    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phoneNumber"))
+    val intent = Intent(Intent.ACTION_DIAL, "tel:$phoneNumber".toUri())
     if (intent.resolveActivity(context.packageManager) != null) {
         context.startActivity(intent)
     }
 }
 
-fun ExceptionTryEmail(intent: Intent, context: Context) {
-    if (intent.resolveActivity(context.packageManager) != null) {
+fun exceptionTry(
+    intent: Intent,
+    context: Context,
+    errorMessage: String = "Не удалось открыть приложение",
+    onFail: (() -> Unit)? = null
+) {
+    try {
         context.startActivity(intent)
-    } else {
-        Toast.makeText(
-            context,
-            "Не удалось отправить сообщение",
-            Toast.LENGTH_LONG
-        ).show()
-    }
-}
-
-fun ExceptionTryMap(intent: Intent, context: Context) {
-    if (intent.resolveActivity(context.packageManager) != null) {
-        context.startActivity(intent)
-    } else {
-        Toast.makeText(
-            context,
-            "Не удалось отправить сообщение",
-            Toast.LENGTH_LONG
-        ).show()
+    } catch (_: ActivityNotFoundException) {
+        if (onFail != null) {
+            onFail()
+        } else {
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        }
     }
 }
 
 fun sendEmail(context: Context, address: String, subject: String) {
-    val intent = Intent(Intent.ACTION_SENDTO).apply {
-        data = Uri.parse("mailto:") // Только email-приложения обрабатывают эту схему
+    val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+        data = "mailto:".toUri()
         putExtra(Intent.EXTRA_EMAIL, arrayOf(address))
         putExtra(Intent.EXTRA_SUBJECT, subject)
     }
 
-    ExceptionTryEmail(intent,context)
+    exceptionTry(
+        context = context,
+        intent = emailIntent,
+        errorMessage = "Не удалось отправить сообщение"
+    )
 }
 
 fun showOfficeOnMap(context: Context, latitude: Double, longitude: Double, label: String) {
-
-    val geoUri = Uri.parse("geo:0,0?q=$latitude,$longitude($label)")
+    val geoUri = "geo:0,0?q=$latitude,$longitude($label)".toUri()
     val mapIntent = Intent(Intent.ACTION_VIEW, geoUri)
 
-    ExceptionTry(mapIntent, context)
-    if (mapIntent.resolveActivity(context.packageManager) != null) {
-        context.startActivity(mapIntent)
-    } else {
+    exceptionTry(
+        context = context,
+        intent = mapIntent,
+        onFail = {
+            val webUrl = "https://google.com"
+            val browserIntent = Intent(Intent.ACTION_VIEW, webUrl.toUri())
 
-        val webUrl = "https://google.com"
-        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(webUrl))
-
-        try {
-            context.startActivity(browserIntent)
-        } catch (e: Exception) {
-
-            Toast.makeText(
-                context,
-                "Не удалось открыть карту",
-                Toast.LENGTH_LONG
-            ).show()
+            exceptionTry(
+                context = context,
+                intent = browserIntent,
+                errorMessage = "Не удалось открыть карту"
+            )
         }
-    }
+    )
 }
 
 fun shareContact(context: Context, contactInfo: String) {
@@ -117,7 +109,12 @@ fun shareContact(context: Context, contactInfo: String) {
     }
 
     val chooser = Intent.createChooser(sendIntent, "Поделиться через...")
-    context.startActivity(chooser)
+
+    exceptionTry(
+        context = context,
+        intent = chooser,
+        errorMessage = "Не удалось поделиться контактом"
+    )
 }
 
 @Preview(showBackground = true)
